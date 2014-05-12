@@ -536,7 +536,6 @@ NGRAM::get_prob(LIST<INT>* history, INT nextword, INT hypid) {
 INT
 NGRAM::get_prob(HYP *h, INT nextword, INT hypid) {
   INT prob = PROB_NULL;
-  HYP* p;
 
   if(use_unk) 
     context[0] = oov2unk(nextword);
@@ -1290,7 +1289,6 @@ NGRAM::update_cache(LIST<HYP*>* hlist) {
   NGRAM_INTER_OBJ *ngo;
   NGRAM_FINAL_OBJ *fgo;
   HYP* h;
-  HYP *p;
 
   // elements of hist are INT[order-1]
 
@@ -1385,7 +1383,6 @@ NGRAM::update_cache(LIST<HYP*>* hlist) {
 INT 
 NGRAM::in_tmp_cache(HYP *h){
   BOOL match;
-  HYP *p;
 
   for(INT i = 0; i < tmp_cache_size; i++){
     match = TRUE;
@@ -1412,7 +1409,6 @@ NGRAM::in_tmp_cache(HYP *h){
 
 NGRAM_INTER_OBJ* 
 NGRAM::get_context_obj(HYP* h){
-  HYP* p;
   NGRAM_INTER_OBJ* ng = NULL;
 
   if(order > 1){
