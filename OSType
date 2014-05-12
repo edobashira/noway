@@ -1,0 +1,10 @@
+#!/bin/sh
+ 
+UNAME=`uname`
+ 
+[ $UNAME = SunOS -a `uname -r | cut -c1` -ge 5 ] && UNAME=Solaris2
+[ $UNAME = HP-UX ] && UNAME=HPUX 
+ 
+echo $UNAME
+ 
+exit 0

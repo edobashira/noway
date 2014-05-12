@@ -1,0 +1,48 @@
+2 Jan 1996
+
+This is noway version 1.0.
+
+Noway is a start-synchronous decoder, based on a stack decoder
+algorithm (described in a technical report available by ftp as 
+ftp://ftp.dcs.shef.ac.uk/share/spandh/pubs/renals/cs-95-17.ps.gz).
+
+It has been tested, and is regularly used, on Sparc, HP700 series, SGI
+and PC/Linux.   Other architectures at your own risk (should work on
+most un*x's).
+
+Edit Makefile to suit your local set up.  Note that it will need
+changing if you do not use the GNU version of make.  Since the
+dependency files will be created first time around you may get
+error messages of the form 
+ Makefile:104: param.d.$ARCH: No such file or directory
+when you make.  Don't worry about this. 
+The code is written in C++ and works fine with g++-2.6.3 (and with 2.7.0). 
+
+See the AbbotDemo system to see noway in action:
+ftp://svr-ftp.eng.cam.ac.uk/pub/comp.speech/data/AbbotDemo.tar.gz
+
+On my Pentium-90 linux system with 64Mb of memory a 20K decoding takes
+about 5-10 realtime, with minimal search errors.  Of course this is
+wildly variable depending on the acoustics, language model, etc.  The
+process size (using the 1993 ARPA trigram LM for WSJ) is around 96Mb.
+
+There have been substantial changes with this program since version 0.5. 
+* Parameter files and binary bigram/trigram files  used for *
+* noway-0.99c or earlier will definitely not work           *
+
+Read the manual page (with this distribuition) and the technical
+report referred to above before using the decoder.
+
+Major changes from earlier versions are listed in the file CHANGES.
+
+Steve Renals <s.renals@dcs.shef.ac.uk>
+Department of Computer Science
+University of Sheffield
+Sheffield  S1 4DP
+UK
+
+(c) Steve Renals, Cambridge University Engineering Department 1994
+(c) Steve Renals, Department of Computer Science, University of Sheffield 1994,1995
+
+----
+

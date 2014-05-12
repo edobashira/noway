@@ -1,0 +1,17 @@
+The Makefile requires the GNU version of make (for the dependency
+files).
+
+The recommended compiler is g++/gcc (also GNU).  It also works with SPARCworks 
+C++.  I haven't tried any other C++ compilers.
+
+You may want to edit Makefile to change compiler flags, default bin directory, 
+etc.  
+
+`make clean` gets rid of executable and .o files.
+
+`make` will compile and link noway.
+
+`make install` will install noway in $BIN (defined in Makefile).
+
+The unix man page is noway.1
+

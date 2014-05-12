@@ -1,0 +1,628 @@
+.TH NOWAY 1 "14 March 1996" "" ""
+.SH NAME
+noway \- LVCSR decoder
+.SH SYNOPSIS
+.B noway
+.RB "[\|" param_file  "\|]"
+.RB "[\|" options  "\|]"
+.SH DESCRIPTION
+.LP
+.B noway
+is a start-synchronous decoder designed for large vocabulary
+continuous speech recognition,  using long-span language models.  In
+the current implementation, the decoder takes phone posterior
+probability vectors as input (typically produced by a neural network)
+and produces a recognized word string as output.  Currently only
+n-gram language models have been implemented (n = 2,3) using a
+backoff approach.
+.LP
+In addition to specifying a language model, a pronunciation dictionary
+and basic set of phone models must also be specified.  Since this
+decoder was designed for use within hybrid ANN/HMM
+systems that do not use cross-word context-dependent models, support
+for cross-word phone models has not been implemented.
+.LP
+.SH OPTIONS
+The command line passes the required options to noway either directly via the
+command line or through a parameter file (containing 1 option + arguments per line; blank lines are ignored and `#' is a comment line character). Options must be separate since they are multi-character. 
+.TP
+.B Mode Options
+.RI "\-text_decode " file
+\-no_decode
+'\"  \-forced_alignment
+'\"  \-lattice_in
+.TP
+.B Dictionary Options
+.br
+.RI "\-phone_models " file
+.RI "\-priors " file
+.RI "\-phi " file
+.RI "\-dictionary " file
+\-no_pron_prior
+.RI "\-sentence_start_symbol " string
+.RI "\-sentence_end_symbol " string
+'\"  \-large_vocab
+.TP
+.B Language Model Options
+.RI "\-lm_scale " num
+'\"  .RI "\-quadgram " file
+.RI "\-trigram " file
+.RI "\-bigram " file
+'\"  .RI "\-wordpair " file
+.RI "\-unigram_merge " file
+\-lm_merge_log_domain
+.RI "\-lm_merge_param " num 
+\-old_caching
+\-full_lm_cache
+\-no_lm_cache
+\-use_unk 
+.RI "\-unk_factor " num
+.RI "\-unknown_word_symbol " string
+.RI "\-write_lm " file
+\-print_lm
+.TP
+.B Acoustic Model Options
+.RI "\-acoustic_scale " num
+.RI "\-duration_scale " num
+.RI "\-phone_deletion_penalty " num
+.RI "\-ascii " "[file]"
+.RI "\-bin " "[file]"
+.RI "\-lna " "nphones [file]"
+.RI "\-socket " port_id
+\-no_lna_check
+.TP
+.B Output Options
+.RI "\-output_file " file
+\-utterance_score
+.RI "\-inc_output " num
+.RI \-phone_decode file
+.RI \-lattice fileheadname
+.RI \-detailed_lattice fileheadname
+\-pipe_lattice
+'\"  \-dump_lub
+.TP
+.B Pruning Options
+.RI "\-prob_min " " threshold [floor]"
+.RI "\-beam " num
+.RI "\-state_beam " num
+.RI "\-n_hyps " num
+.RI "\-pathword_threshold " num
+\-hyp_prune 
+\-new_lub
+.RI "\-lub_n " num
+.RI "\-garbage_model " num
+.RI \-phone_floor " file
+.TP
+.B Decoding Criterion Options
+\-forward_process 
+\-merge_hyps 
+\-cross_sentence
+.TP
+.B Miscellaneous Options
+.RI "\-parameter_files " files
+\-verbose 
+\-version
+\-help
+'\"  .RI "\-d " options
+'\"  .RI \-n_hyps_db " num
+.LP
+.SH MODE OPTIONS
+Noway usually takes a sequence of acoustic probability vectors as
+input and gives a sequence of recognized word strings as output.  The
+following options change this basic i/o functionality.
+.TP
+.B \-no_decode
+This option is used when creating binary LM files with
+.B  -write_lm 
+or
+when printing out an LM file in ascii to stdin with 
+.B -print_lm.
+It has the effect of halting the program after reading (and writing/printing)
+the LM.  The lexicon/phone models are not read in, and no decoding
+occurs.  If this option is specified, then any data on stdin may be
+interpreted as the input LM file and not acoustic probabilities.
+.TP
+.BI "\-text_decode " "file"
+The set of word strings in the specified file (in noway output format)
+are scored using the language model.  The lexicon/phone models are not
+read in, and no decoding occurs.  If the 
+.B \-verbose 
+flag is specified,
+the LM score will be split up into individual contributions.
+'\"  .TP
+'\"  .BI "\-forced_alignment " "file"
+'\"  (NOT YET IMPLEMENTED.)
+'\"  .TP
+'\"  .B \-lattice_in
+'\"  (NOT YET IMPLEMENTED.)
+.LP
+.SH DICTIONARY OPTIONS
+.TP
+.BI "\-phone_models" " file" 
+This file defines the phone models. It specifies the number of states
+(including entry and exit null states), the model topology, the
+transition probabilities and the output probability distributions
+associated with each state (obtained using the acoustic input options).
+.Sp
+The format of the file is as follows.  The first line consists of the
+string `PHONE', and the second line contains an integer giving the
+number of phone models.  The remainder of the file contains the
+descriptions of each phone model.  Within a phone HMM 0 indexes the
+ENTRY null state, 1 indexes the EXIT null state and 2 onwards index the
+real emitting states.  The format for a phone model is:
+.sp
+.PD .1v
+.SM
+<id> <number of states> <label>
+.IP
+.SM
+\-1 \-2  <probid\-1> <probid\-2> .\|.\|.
+.IP
+.SM
+<from_state> <#out\-trans> <to_state> <prob>  .\|.\|.
+.IP
+.SM
+<from_state> <#out\-trans> <to_state> <prob>  .\|.\|.
+.IP
+.SM
+ .\|.\|.
+.PD
+.IP
+Where \-1 and \-2 represent dummy phone numbers for the the entry and
+exit states, and <probid\-n>
+represents the element of the acoustic probability vector
+corresponding to that state (1 for each state).  The number of
+integers on this line equals the number of states. The remaining lines
+specify the transition probabilities giving the transitions out of
+each state; prob is a floating point number (not logprob).  An example
+entry for the phone `aa' is:
+.sp
+.PD .1v
+.SM
+2 4 aa
+.IP
+.SM
+\-1 \-2  1 1 
+.IP
+.SM
+0 1 2 1.00000
+.IP
+.SM
+1 0
+.IP
+.SM
+2 1 3 0.50000
+.IP
+.SM
+3 2 3 0.50000 1 0.50000
+.PD
+.sp
+Here `aa' has 2 non\-null states, making 4 states total and is a
+left\-to\-right `Viterbi' model, with output probabilities corresponding
+to acoustic probability element 1.
+.Sp
+Note that an `interword-pause' phone model is essential to the
+operation of noway.  This between-word pause model will typically
+contain 1 non-null state that may 
+be skipped, and will use the `silence' distribution.  The
+interword-pause model is placed at the root of the lexicon and
+corresponds to an optional pre-word pause;  for edge effects it is also
+the acoustic realization of sentence_end.  Note that the name `interword-pause' 
+is currently hardwired in, and such a model 
+.I must 
+appear in the phone models file.
+.TP
+.BI "\-priors" " file" 
+The priors file contains the prior probabilities (typically estimated
+using the relative frequencies in the training data) for the output
+classes of the network (phones).  The estimated posterior
+probabilities are divided by the prior to give scaled likelihoods.  If
+no priors file is specified then it is assumed that scaled likelihoods are
+being input.
+.TP
+.BI "\-phi" " file"
+Phone information file - this contain the information that can also be
+specified by \-phone_models and \-priors.  If \-phi is used then
+\-phone_models and \-priors are not required.  However, using \-phi may be
+unreliable.  If so, use \-phone_models and \-priors instead. The phi
+file defines the phone models and their priors.  It assumes a
+left-to-right "straight-through" topology with transition
+probabilities of 1.0 from one state to the next, and specifies the
+self-loop and exit probabilities of the final state.  The first line
+of the ascii file is a header "PIF" and the second line gives the
+number of phone models.  The format for each phone is as follows:
+.sp
+.PD .1v
+.SM
+<label> <prior> <nstate> <selfloop-prob-final-state> <exit-prob-final-state>
+.IP
+.TP
+.BI "\-dictionary" " file" 
+The dictionary file specifies the lexicon and pronunciations used in
+the decoding.  Multiple pronunciations are allowed, by treating each
+pronunciation of the same word as a separate lexical item (this makes
+a tree representation of the lexicon much simpler).  Prior
+probabilities may also be specified for a pronunciation.  Each line of
+this file (no header) specifies a pronunciation as follows:
+.IP
+WORD(<prior>) phone1 phone2 phone3
+.sp
+e.g.
+.IP
+ABANDONMENT(1.00)  uh b AA n d un + m un t +
+.sp
+The `+' is ignored; it may be used to mark syllables.  Note that
+dictionary items should be in alphabetical order.  The prior
+probability on pronunciations is optional.
+.TP
+.BI "\-sentence_start_symbol" " string" 
+This string is the symbol used in the
+language model to signify the start of an
+utterance. The default value is `<s>'.
+.TP
+.BI "\-sentence_end_symbol" " string" 
+This string is the symbol used in the language model to signify the end of an utterance.  The default value is `<\\s>'.
+.TP
+.BI "\-no_pron_prior"  
+Ignore prior probabilities for words with multiple pronunciations.
+.TP
+'\"  .B \-large_vocab
+'\"  This is flag that must be specified if the vocabulary size is larger
+'\"  than 65,532 words.  It tells noway to use INTs not SHORTs in the LM
+'\"  data structures.  (NOT YET IMPLEMENTED)
+'\"  .LP
+'\"  .I Note to Steve: program panics if one of the above options is specified '\"  without a legal input file.
+.LP
+.SH LANGUAGE MODEL OPTIONS
+These options specify the language models used in decoding.  Currently
+only trigram and bigram LMs are implemented.  However the interface is
+designed for flexibility.
+'\"    see the
+'\"  .I Users Guide to noway
+'\"  for details on implementing new LMs.
+.TP
+.BI "\-lm_scale" " int" 
+Used to scale the language model log probabilities.  This can be
+used in place of
+.B  -acoustic\-scale.
+.TP
+.BI "\-trigram" " file" 
+This file contains a back-off language model: trigram probabilities,
+bigram probabilities and back-off weights, and unigram probabilities
+and back-off weights.  The set of words should be a subset of those
+specified in the dictionary (i.e. every word in the LM must have a
+pronunciation).  A binary format is recommended; the ASCII ARPA format
+is also acceptable.  The binary format LM file may be created from
+the ASCII ARPA format using noway with the
+.B -write_lm 
+option.
+.TP
+.BI "\-bigram" " file" 
+Similar to 
+.B -trigram.  
+The file should contain bigram probabilities and
+unigram probabilities and back-offs.
+'\"  .TP
+'\"  .BI "\-quadgram" " file"
+'\"  Similar to -trigram.  The file should contain 4-gram probabilities,
+'\"  trigram probabilities and back-offs, bigram probabilities and
+'\"  back-offs and unigram probabilities and back-offs. (NOT YET IMPLEMENTED)
+'\"  .TP
+'\"  .BI "\-wordpair" " file" 
+'\"  This contains a wordpair grammar.  (NOT YET IMPLEMENTED/TESTED)
+'\"  .TP
+.BI "\-unigram_merge"  file
+Merge  file of unigram probabilities with standard bi/trigram LM.
+ASCII file with <prob> <word> on each line.
+.TP
+.BI "\-lm_merge_log_domain"  
+If set then LM merging (for domain specific models) should be carried
+out in log probability domain (otherwise merge in linear domain).
+.TP
+.BI "\-lm_merge_param"  num
+Merge LM probabilities as (1-num)p + (num)q, where p is the main LM
+probability and q is the domain specific LM probability.
+.TP
+.B \-old_caching
+Use a previous LM caching scheme, which is usually less efficient than
+the default.
+.TP
+.B \-full_lm_cache
+All language model probabilities for a particular context are cached
+when a hypothesis with context is to be extended.  The default
+behaviour is only to cache LM probabilities as they are used.
+.TP
+.B \-no_lm_cache
+No language model cache is constructed and LM probabilities are looked
+up from the main repository every time.
+.TP
+.B \-use_unk
+Do not ignore LM probabilities containing <UNK>.  This is required for
+situations in which the acoustic model vocabulary size is larger than
+the language model vocabulary size.
+.TP
+.BI "\-unk_factor" " num"
+Factor used to scale probabilities P(<UNK> | *) obtained from the LM
+when \-use_unk is specified
+.TP
+.BI "\-unknown_word_symbol" " string"
+Symbol (e.g. <UNK>) used in LM file for probabilities involving
+out-of-vocabulary words. Defaults to <UNK>.
+.TP
+.BI "\-write_lm" " file"
+Write the language model to a binary format file.
+.TP
+.B \-print_lm
+Print out the LM  probabilities and backoffs to stdout. 
+.LP
+.SH ACOUSTIC MODEL OPTIONS
+.TP
+.BI "\-acoustic_scale" " float" 
+Factor by which  to scale the acoustic log (scaled) likelihoods.  This is
+often known as the acoustic model/language model match factor.
+Defaults to 1.0. 
+.TP
+.BI "\-duration_scale" " float"  
+Used to scale the durations (i.e. log transition probabilities).
+.TP
+.BI "\-phone_deletion_penalty" " float"  
+Used to scale the exit transition probability(s) of each phone
+model. 
+.TP
+.BI "\-ascii" " [file]" 
+Receive acoustic phone posterior probabilities in ASCII float format.
+If no file is specified uses stdin.
+.TP
+.BI "\-bin" " [file]" 
+Receive acoustic phone posterior probabilities in binary IEEE float format.
+If no file is specified uses stdin.
+.TP
+.BI "\-lna" " nphones [file]" 
+Receive acoustic phone posterior probabilities in lna format.
+If no file is specified uses stdin.  
+.TP
+.BI "\-socket" " port_id" 
+Receive acoustic phone posterior probabilities in binary IEEE float
+format, via a unix socket with specified port_id.  
+.TP
+.B \-no_lna_check
+Default behaviour is to check that an acoustic probability vector sums
+to 1 (and to exit if this is not the case).  This option disables such
+checks. 
+.LP
+.SH OUTPUT OPTIONS
+.TP
+.BI "\-output_file" " [file]" 
+Outputs decoded sentence transcriptions to this file  (defaults to
+stdout). 
+.TP
+.BI "\-utterance_score" 
+Print out logprob score in parenthesis after each decoded transcription in
+the output file. 
+.TP
+.BI "\-inc_output" " int"
+Output the most probable hypothesis every 
+.I int 
+frames of the decoding
+.TP
+.BI "\-phone_decode" " file"
+Outputs phone-time decoding to file
+.TP
+.BI "\-lattice" " file_head_name"
+Outputs a set of word lattices (1 file per utterance) in an HTK-type
+format, but does not include LM probabilities.
+.TP
+.BI "\-detailed_lattice" " file_head_name"
+Outputs a set of word lattices (1 file per utterance) in an HTK-type
+format, including LM probabilities. 
+.TP
+.BI "\-pipe_lattice"
+Outputs lattice to stdout. Should not be used in conjunction with 
+.B \-verbose.
+.TP 
+.BI "\-ctm" " file_head_name"
+Produces output in ctm format, 1 file per utterance.  Default file
+basename is CTM.
+.TP 
+.BI "\-frame_shift" " frame-shift"
+Frame shift used by the acoustic analysis, in milliseconds.  (In other words, this is the time difference in the speech signal between successive frames of phone probabilities that are supplied as input to noway.)  Default is 16 milliseconds.  If you are not asking noway to display any timing-relating information, then it may not matter whether you set this option accurately.
+.TP 
+.BI "\-dump_lub" " file_head_name"
+Outputs the least upper bound envelope on the log probability,
+together with the probability trace of the best complete hypothesis.
+Produces one file per utterance, default basename is LUB.  Each file
+has 4 columns:
+.IP
+<t> <lub(t)> <prob(t)> <prob'(t)>
+.sp
+lub(t) is the least upper bound estimate at frame t
+prob(t) is the probability of the decoded utterance at time t
+Both lub(t) and prob(t) include the exact LM probability of the
+current word when within words.
+.sp
+prob'(t) is similar to prob(t) except it does not include the exact LM
+probability of the current word - instead it uses the upper bound
+estimate (default LM prob) that is used in the search.
+.sp
+This means that prob'(t) >= prob(t).  Also prob'(t) is often higher
+than lub(t).
+.LP
+.SH PRUNING OPTIONS
+.TP
+.BI "\-prob_min" " threshold [floor]"
+Set a lower threshold value for the phone posterior probability
+estimates.  At or below this threshold, reset the posteriors to a
+(lower) floor value.  This method of phone deactivation pruning has proved to be
+extremely effective, increasing efficiency without imparting excessive search
+errors.
+.TP
+.BI "\-phone_floor" " file"
+Set phone-dependent posterior probability thresholds, using the list
+of thresholds in file.
+.TP
+.BI "\-beam" " float" 
+Defines the likelihood beam (in log10 scale) around the least
+upper bound score.  Hypotheses outside this beam get pruned.
+.TP
+.BI "\-state_beam" " float" 
+Different likelihood beam value for within phone states (cf exit
+states).  This may speed things up with minimal search error for the
+cases when within-word scores are an over-estimate compared with
+word-end scores (i.e. when 
+.B \-pathword_threshold 
+is not used).
+.TP
+.BI "\-n_hyps" " int" 
+Maximum number of hypotheses extended at any time step (i.e. maximum
+stack size).  This may be regarded as an adaptive beam.
+.TP
+.BI "\-pathword_threshold" " int"
+Threshold number of words passing  through a node, below which the
+exact maximum LM upper bound is computed.  Equal to or above this
+number of `pathwords' the default max bigram probability is used.
+A pathword threshold of 1 indicates that the exact LM is not used in within
+word pruning. 
+.TP
+.B \-hyp_prune  
+Flag that specifies that a set of hypotheses being extended from the
+same start time should be pruned individually.  There is no evidence
+that this helps;  it is only likely to help if 
+.B -pathword_threshold 
+> 1.
+.TP
+.B \-smear_unigram
+.TP
+.B \-new_lub
+Better estimate of lub (least upper bound on logprob) by backtracing
+from completed word extensions to set lub.
+.TP
+.BI "\-lub_n" " int"
+Use the the average of the highest 
+.I int 
+phone posteriors (excluding the first) to initialize lub.
+.TP 
+.BI "\-garbage_model" " int"
+Use phone model 
+.I int 
+as a garbage model to initialize lub, rather than
+averaging 2nd to (n+1)th highest phone posteriors.
+.LP
+.SH DECODING CRITERION OPTIONS
+.TP
+.B \-forward_process  
+Causes the the within-word probability scores to be Baum-Welch forward
+probability estimates rather than the Viterbi approximation.
+.TP
+.B \-merge_hyps  
+Rather than choosing the most probable hypothesis from a set of
+similar hypotheses merge (i.e. sum) hypotheses with the same word
+sequence and reference time.  If both 
+.B \-forward_process 
+and
+.B \-merge_hyps 
+are selected then a full maximum likelihood decoding
+criterion will be used.
+.TP
+.B \-cross-sentence
+Allow multiple sentences to be decoded from one utterance (i.e. allow
+end-sentence start-sentence in mid-utterance).
+.LP
+.SH MISCELLANEOUS OPTIONS
+.TP
+.BI "\-parameter_files" " files"
+Specify a list of parameter files.
+.TP
+.B \-verbose
+Write out verbose diagnostics (such as time alignments and scores) to stdout.
+.TP
+.B \-version
+Output noway version number 
+.I only.
+.TP
+.B \-help
+Outputs list of noway input parameter options. 
+'\"  .BI "\-d" " options" 
+'\"  Specify debug options
+'\"  .TP
+'\"  .BI "\-n_hyps_db" " num" 
+'\"  Number of hypotheses per frame to print out when debugging.
+.LP
+.SH EXAMPLES
+For a 20,000 word trigram British English decoding task using the BEEP
+dictionary (with acoustic posterior probabilities in file probs.lna) a
+command line might be:
+.IP
+zcat probs.lna.gz | noway tgparm -output_file tg.dec > logfile
+.LP
+Where the file 
+.I tgparm 
+contains all the chosen options except 
+.B \-output_file 
+(note that there is no reason why 
+.B \-output_file 
+cannot be included in a parameter file):
+.IP
+.PD .1v
+.SM
+-verbose
+.IP
+.SM
+-phone_models /usr/local/realsoft/etc/UKphone.icsi
+.IP
+.SM
+-priors UKpriors
+.IP
+.SM
+-dictionary /usr/local/realsoft/etc/wsjcam0-dict
+.IP
+.SM
+-trigram /usr/local/realsoft/etc/tg-20onp-94.bin
+.IP
+.SM
+-lna 45
+.IP
+.SM
+-acoustic_scale 0.3
+.IP
+.SM
+-prob_min 0.000075
+.IP
+.SM
+-n_hyps 15
+.IP
+.SM
+-new_lub
+.IP
+.SM
+-beam 4
+.IP
+.SM
+-state_beam 2
+.LP
+To create a binary format language model from a gzipped ARPA format
+file:
+.IP
+zcat tg-20onp.arpa.gz | noway -no_decode -trigram -write_lm tg-20onp.bin
+.LP
+To obtain the LM probability for some text (in file text.sentences):
+.IP
+noway -text_decode text.sentences -trigram tg-20onp.bin -output_file text.probs
+.PD
+.LP
+.SH SEE ALSO
+rnnForward (l); wordscore(l).
+.br
+.I
+Decoder Technology for Connectionist Large Vocabulary Speech Recognition\c
+, Steve Renals and Mike Hochberg, Dept. of Computer Science Memo CS-95-17, Dept. of Computer Science, University of Sheffield, 1995.
+.SH AUTHOR
+Steve Renals <s.renals@dcs.shef.ac.uk>.
+.br
+.LP
+Copyright
+.if t \(co
+1994 Steve Renals,  University of Cambridge
+.br
+Copyright
+.if t \(co
+1994-96 Steve Renals, University of Sheffield

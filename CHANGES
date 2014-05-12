@@ -1,0 +1,755 @@
+============
+noway-2.9.4:
+============
+
+Updated the man page and command line help to warn that using -phi
+may be unreliable.
+
+============
+noway-2.9.3:
+============
+
+Updated the man page to be up to date regarding how the -ctm and
+-frame_shift command line options work.
+
+============
+noway-2.9.2:
+============
+
+Changes in 2.9.2 from 2.9.1 include:
+   * Fixed NW_pqueue.h and NW_queue.h to work with recent versions of gcc
+     (David Gelbart).
+   * Attempts to bring CHANGES file up to date
+   * Fixed some broken-looking asserts in NW_acoustic.cc
+
+============
+noway-2.9.1:
+============
+No information is available on noway version 2.9.1. It was never released
+but corresponds to the version of noway in /u/drspeech/src/noway-2.9/
+as of August 2007 and is the first version checked into the ICSI drspeech
+CVS repositry.
+
+Note that it's not called version 2.9 as there may already
+be multiple differing versions around claiming to be version 2.9.
+
+Differences for noway-2.7 include:
+   * Addition of "-pause_phone_deletion_penalty"
+   * Bugfixes???
+
+============
+noway-2.9:
+============
+No information is available on noway version 2.9.
+
+============
+noway-2.8:
+============
+No information is available on noway version 2.8.
+
+============
+noway-2.7:
+============
+
+   * When making, noway executable now goes in obj.$ARCH directory
+     (but is sym linked to top level src directory) 
+
+   * Fixed behaviour of -verbose with -online
+
+   * Fixed bug in NGRAM::write_hdr() used by -write_lm option
+
+   * Fixed bug in dictionary tree construction that arose when <SIL>
+     is in the dictionary
+
+   * -write_lm automatically specifies -use_unk (i.e. <UNK> entries in the 
+     input (arpa) LM will be included in the noway format binary ngram file
+
+   * restarting behaviour altered:  if all hypotheses go out of beam
+     rewind to the end of the last word that was output (which is the 
+     utterance start in the non-online case) and restart with the
+     values of beam and state_beam incremented by one.  The beams will
+     reset to their original values at the end of the utterance (which
+     means never in the "pure online" case with no sectioning).  Note
+     that this means that restarting in the online case may produce a
+     worse (lower probability solution) since it does not rewind to
+     the utterance start.
+
+   * -output_pron_version adds pronunciation version information to 
+     srt and ctm files.
+
+   * -output_silence means Silence_symbol segments will be output to
+     srt and ctm files (previously this happened by default).
+
+   * Added support for blind mixture ngram language models via 
+     -blind_mixture_ngram <file>.  The file should contain a 
+     list of files containing the component ngrams.  Incremental EM
+     algorithm is used to update the components.  (resetting?)
+
+   * Changes to byte swapping code (now part of GENFILE class) due to
+     Dan Ellis.  Should be transparent to users...
+
+
+============
+noway-2.6:
+============
+
+   * Reactivated cross-sentence
+
+   * Checked for overlaps in ndx file with -ndx option
+
+   * Fixed bugs in NGRAM::get_n_nextgrams()
+
+
+============
+noway-2.5:
+============
+
+   * -online now now gives streaming output to output_file, srt, ctm
+       (algorithm delay depends on LM, pruning, etc.).  Does not apply 
+       when lattices are being produced.
+
+   * logprior field in lattices (r=) only printed out if at least one
+      log pronunciation prior is non-zero.
+
+   * No longer need to specify sentence_end_symbol (</s>) in LM - can
+      just use "sentence_start to signify sentence break.  (This may
+      not work properly with -text_decode
+
+   * -ndx <file.ndx> : this option will only process the sections
+      specified in the ndx file, and will write the correct sgml tags
+      to the ouptut CTM or SRT files.  It does not expect end of
+      utterance markers in the lna file (indeed, these are likely to
+      screw things up...)  Very rudimentary parsing of ndx file...
+
+   * -skip-frames skipped 1 frame too many - fixed.
+
+   * -cross_sent now available again.  Cross sentence decoding requires a
+     language model which only uses <s> (not </s><s>) for sentence
+     breaks and there needs to be a "long-pause" phone model (like
+     "interword-pause") which is the acoustic realization for sentence 
+     break.  [Not yet tested - need an LM]
+
+   * fixed: -bin <file> now works (no need to cat in bin acoustic
+      files)
+
+   * now checks that interword-pause model has the correct structure - 
+      entry and exit null states and skippable single non-null state
+
+   * -tagprobs <tagfile> for OOV decoding using class tags (use in
+     conjunction with -ngram)
+
+   * -missing_pron_file <FILE> will write any words in the LM but in
+      the dictionary to <FILE> (previously automatically written to
+      stderr, which is still the default)
+ 
+
+============
+noway-2.4:
+============
+
+   * If -ctm, -srt or -online are specified the timings in lattices,
+      CTM and SRT files will treat each utterance as a segment  
+      of a continuous stream (so first frame of utt n, follows on
+      from last frame of utt n-1).  This behaviour can be switched off 
+      using -reset_time_each_utt.
+
+   * New lattice link field: r=%g is the log prior probability of
+      pronunciation version v.  This value is not incorporated in a.
+
+   * Default starting context in -text_decode is now <s>...<s>
+      (previously was </s> <s>).  This assumes that the LM has the
+      characteristic  P(w | <s> ... <s>) = P(w | <s>)
+
+============
+noway-2.3:
+============
+
+   * Fixed reading ascii ARPA LM files (use -ngram)
+
+   * (Sun CC):  Templates.DB now in arch-specific directories (permits 
+      concurrent compilation on Solaris/sparc and Solaris/x86)
+
+============
+noway-2.2:
+============
+
+   * C++ jiggery pokery to allow compilation by g++ (noway-2.1
+      compiled with Sun CC and not g++).
+
+   * Fixed new bigram LM code (bigrams LMs didn't previously work in
+     noway-2.*, it turns out...).  Note that binary bigram files
+     created by noway 0.9 <= version < 2.0 must be read using -bigram; 
+     -ngram will not work.  
+
+   * LMs read in using -bigram or -trigram cannot (yet) be used with
+      -text_decode, -write_lm or -print_lm.
+
+   * This version tested using:
+        Solaris-2.5.1 / x86:  Sun CC and g++
+        Solaris-2.5 / sparc:  Sun CC
+        Linux / x86:          g++
+
+============
+noway-2.1:
+============
+
+   * Another lattice bug fixed! Bug Description: more than one lattice
+     link with same word label and end time (but different start
+     times), only one link would be written to file (the highest
+     probability link, except for links ending at the last frame of an 
+     utterance, in which case the lowest probability link).  
+
+   * Architecture-specific subdirs for .o and .d files.  
+     (But the final executable is written to the top-level dir.)
+
+   * Make no longer emits error messages for missing .d files/
+
+============
+noway-2.0p4:
+============
+
+   * -online --- started to implement true online decoding.  This
+      option currently gives better memory management and does not
+      allow restart when everything goes out of beam  
+
+   * -skip_frames <n>  --- skip the first <n> frames in the first
+      sentence to be decoded  (after skipping sentences controlled by
+      -skip_sents <n>)
+
+   * SRT and CTM output formats now keep timing marks across
+     utterances - note that noway does not know about pre-excised
+     acoustics (e.g. commercial breaks in BN)
+
+   * Major rewriting of language model (ngram) and hypothesis code.
+
+   * -ngram <LM file> will accept n-gram LMs where n >= 1
+
+   * continue to use -trigram to ensure that you take advantage of any
+     optimizations for trigram LMs 
+
+   * If you used the acoustic scores for each word produced in word
+     lattices,  ctm or srt files then this fixes a serious bug.  These
+     scores included some LM component, although the time alignments and
+     lattice topologies were fine.  
+
+
+============
+noway-1.18:
+============
+
+   * LM caching ignored the word entrance penalty specified by 
+      -lm_offset (oops!) - fixed.
+
+   * Makefile mods - standard BINDIR names have changed, but now use
+      $(prefix) and  $(exec-prefix).  Also std flags for Sun CC are
+      now -fast -xsb (latter for src browser).  CXX now selects the
+      C++ compiler and CXXFLAGS controls optional compile flags 
+
+============
+noway-1.17a:
+============
+
+   * Fixed a couple of lattice header bugs (nodes count was out by 1,
+      and moved "amscale=" section further up)
+
+
+============
+noway-1.17:
+============
+
+   * Ooops - fixed a bug in 1.16 which meant that in certain
+      circumstances the final hypothesis was not printed out (but
+      <NULL> was...! 
+
+   * Also one or two debugging/diagnostic things changed added (no
+      interest to most users)
+
+============
+noway-1.16:
+============
+
+   * new option -srt <filehead> for SRT type file output for TREC
+     spoken document  retrieval applications
+
+   * internal changes to stack manipulation code (should not be
+      noticeable, although fewer hyps are created in many circumstances)
+
+   * several internal changes to lattice code 
+
+   * -demo no longer sets '-inc_output 1'
+
+   * -demo prints out what defaults it is setting
+
+   * fixed the bug which gave the wrong node  number to the last node
+     in the link defs part of the lattice file 
+   
+   * fixed a couple of minor memory leaks in the lattice code
+
+   * fixed a problem in which some lattice comments weren't preceded by 
+     a comment '#'
+
+   * added lines for base,lmscale,amscale and wdpenalty (=lmoffset) in
+     lattice header
+
+   * new option -print_unigrams to print out unigram probs and backoffs 
+      (use like -print_lm)
+
+   * both -print_lm and -print_unigrams now take a filename argument
+
+============
+noway-1.15:
+============
+   
+   * -demo option, equivalent to:
+        -inc_output 1 -acoustic_scale 0.3 
+        -new_lub -smear_unigram 
+        -beam 4 -state_beam 5 -n_hyps 7 -prob_min 0.00025 
+     -demo is overridden if any of these is explicitly set.
+
+   * -no_smear_context option removed (now default behaviour).  Use 
+     -smear_context option for this type of LM approximation (shouldn't
+     affect most users)
+
+   * -lattice now gives lattices in HTK SLF format (I think) - so now 
+     nodes are separately defined and links are defined in terms of nodes
+     and not times.  Lattices are also pruned (no dead-end paths) resulting
+     in a factor of 2 size reduction (very approx.).
+
+   * Redid file i/o so that auto-gzip really does work (I hope).  This 
+     means you can have things like '-trigram lmfile.bin.gz' and so on.
+     Also rather than having to 'zcat' lna files on stdin, you can say e.g.
+     '-lna 45 wsjcam0-dta.plp-merge.lna.gz'.  This is a bit ugly, since it is 
+     two arguments to one option (ordering is important) - this may change in
+     v2.0 (backward-compatible would be -lna 45 -lnafile <fname>, more 
+     logical might be -lna <fname> -lnasize 45.  Note that if lnasize isn't
+     given noway guess it from the number of priors read in.  Also note that 
+     if you use '-lna <n> <lnafil.gz>' together with -max_sents (i.e. don't
+     decode all the utterances) you'll get a "Broken Pipe" message at the end.
+     Not sure how to fix this.
+
+   * Note that using -lattice LAT.gz will result in gzipped lattice files 
+     for each sentence named  LAT.1.gz LAT.2.gz etc.  Similarly for -ctm CTM.gz.
+
+   
+
+
+============
+noway-1.14:
+============
+
+   * all input/output files (except param files) automatically piped through 
+     gzip/compress if filename ends in .gz/.Z (needs thorough testing!)
+
+
+============
+noway-1.13:
+============
+
+   * timing stuff is now only in if -DTIMING specified in the Makefile
+
+   * socket stuff is only in if -DSOCKET specified in the makefile
+
+   * -smear_unigram now writes the correct max unigram log probability 
+      to each node, rather than 0... whoops!
+
+
+============
+noway-1.12:
+============
+
+   * -skip_sents <n> - don't decode the first <n> sentences (useful if
+      a big job dies...) 
+
+   * -text_decode now works on very large text files (e.g. a million words) 
+
+============
+noway-1.10:
+============
+
+   * lattices are now better pruned (over a factor of 10 smaller) and
+      interword pause is a separate lattice element ("<SIL>") rather
+      than being included in the following word.  They should also be
+      ordered by start time and hopefully free of duplicate
+      entries. (No secondary ordering is guaranteed on lattice
+      elements with the same start time)
+
+   * -silence_symbol - sets silence symbol used in lattices, defaults
+      to <SIL>
+
+   * -detailed_lattice removed - the LM information is meaningless
+       without the context that is not available in a lattice#
+
+   * lattice acoustic probs do not now include the prior on
+      pronunciations (they used to)
+
+   * -frame_shift to specify frame_shift (in ms, defaults to 16).
+       (Used to specified by second arg to -ctm.)
+
+   * modified Makefile to detect ultra Solaris (different CFLAGS and
+      BIN directory)  
+
+   * better probability values output by -ctm and -phone_decode
+
+   * note that the manual page is a bit of date - but changes should
+      all be logged in this file.
+
+   * note that logfile output gives silence information in the case of
+      -lattice and -ctm 
+
+============
+noway-1.9:
+============
+
+
+   * -lm_offset:  Add a constant offset to the LM log probability
+      (i.e. a word entrance penalty). 
+
+   * -phi is the new name for -pif.  -pif is no longer recognised (and
+      never existed!)
+
+   * -no_smear_context:  don't use the standard default LM
+      approximation max P(*|*,w).  
+	
+   * -smear_unigram:  LM smearing using unigram probabilities.  Each
+      node in the tree uses the maximum  unigram probability of all
+      words passing through it as a LM upper bound.  If
+      -no_smear_context is specified this is used as an alternative to
+      default_bigrams, otherwise the two approximations are summed...
+
+   * added little bits of error catching code to -lna (which you'll
+      hopefully never notice...)  
+
+   * fixed some bugs relating to -ctm (hopefully)
+
+   * Slightly more useful decoding statistics at the end
+
+============
+noway-1.8:
+============
+
+   * Fixed bug relating to reading in ascii ARPA LM files with
+     -use_unk specified.  This didn't affect file conversion from ARPA
+     to noway bin format but would effect any decoding (or
+     text-decoding to compute perplexity) using an ascii ARPA format
+     LM.
+
+   * -unk_factor:  default changed from 1/nunigrams to 1.0.  This
+     makes a lot more sense since it means that unk_factor needn't be 
+     specified for text_decode.  You need to explicitly specify
+     unk_factor if you want to do OOV decoding from acoustics.
+
+   * -text_decode:  the way that <s> and </s> are dealt with was
+      changed so as to give identical results (modulo rounding errors)
+      to the standard perlexity computing program in the CMU toolkit
+      (bbo) which is also on the LM-1 CDROM.
+
+   * -nl_is_end_sent:  new option so that a newline in the text file
+     for text_decode is treated as </s><s>.  This was previously
+     default behaviour.  Use this option if the text file is a
+     reference sentence file you might use to score noway.  Do not use
+     if it is a .text file with <s> </s> included.
+
+   * NB:  Symbols <art> or <p> in the text file are currently treated
+     as any other word - so if they are not in the LM vocab will be mapped
+     to <UNK>.  This will change (at some point).
+
+============
+noway-1.7:
+============
+
+   * No longer requires all words in LM to have acoustic
+     (pronunciation) models - they will just never be recognised.
+     There was never any real reason for this restriction.
+
+   * -use_unk: do not filter out unknown words in pronunciation
+     dictionary (i.e. words not in LM) but build a pronunciation model
+     and use <UNK> to obtain LM probabilities.  
+
+   * open vocabulary -text_decode now available when -use_unk is specified
+
+   * -unk_factor:  scale factor for LM probabilities of form P(<UNK>|
+     context).  This defaults to 1/(n-unigrams-in-LM) - note that for
+     equivalence to the CMU SLM tool for perplexity calculation,
+     -unk_factor 1.0 should be specified (I think that is what the bbo
+     tool does) - but this gives artificially high probabilities, I
+     think. 
+
+   * -text_decode now works for bigram LMs as well as trigram LMs
+
+   * to create LMs suitable for OOV decoding, it is necessary to have
+     a LM file containing probabilities for <UNK> - this can be done
+     using the -use_unk flag when converting from ARPA-ASCII to
+     NOWAY-BINARY formats (using -no_decode -use_unk).  Note that
+     binary LM files including <UNK> can be used quite happily for
+     closed vocab decoding (i.e. -use_unk not set).  But if you want
+     to do open vocab work you will find it necessary to remake your
+     noway binary LM files using -use_unk.  Sorry.
+
+  * a few memory optimizations in the vocab tree - noticeable when
+    using a very large vocab  (or a small LM).
+
+============
+noway-1.6:
+============
+
+   * Support for .pif files using -pif <file>.  If this option is used
+     then neither -priors or -phone_models are required
+
+   * Now -ctm [basename [frame-shift(ms)]] (was -ctm16 [basename]).
+     Also prints out acoustic scores in ctm files.  Frame shift
+     defaults to 16ms, basename to CTM.
+
+============
+noway-1.5:
+============
+
+   * Annoying \n's removed from output file (when did they creep in???)
+
+   * default_bigrams[] array now computed the same for ARPA LMs as for
+      noway binary fmt LMs (this would only have been noticed if you
+      used ascii ARPA fmt LMs for decoding)
+
+   * Fixed (for real this time) the hdr problem in reading ascii ARPA
+      LM files - '\data\' can now be in the first 4 chars...
+
+   * Fixed -dump_lub, so traces of lub vs. prob of best hypothesis can
+      be output
+
+============
+noway-1.4:
+============
+
+   * Fixed ARPA LM reading bug (introduced in noway-1.2) [no I didn't...]
+
+   * Initial "programmer's manual available (progman.{tex,ps})
+
+============
+noway-1.3:
+============
+
+   * Implemented -pipe_lattice option
+
+   * Implemented -ctm16 output (ctm output for 16ms frame rate) option
+
+============
+noway-1.2:
+============
+
+   * Implemented lattice generation (-lattice  and -detailed_lattice)
+
+   * Fixed rewind() bug in reading in ARPA format ascii LMs
+
+   * Updated and debugged man page
+
+   * Store pronunciation versions in lexicon tree
+
+   * abort() replaced with exit() in panic()
+
+   * Improved 22-bit hash function
+
+   * Rewrote hashing to remove need for template specialization 
+     (horribly non-portable!)
+
+   * Updated to compile with Sparcworks C++ compiler
+
+============
+noway-1.1:
+============
+
+   * Corrects a param table bug in noway-1.0
+
+
+============
+noway-1.0:
+============
+   (Don't use - bugged!)
+
+   * Some code cleanups
+
+   * Redundant options -envelope and -state_envelope removed (use
+     -beam and -state_beam instead).
+
+   * Purify used to check for memory leaks, etc.
+
+   * -text_decode also returns test set perplexity
+
+============
+noway-0.99g:
+============
+
+   * Redundant options -pron_prior, -inc_lm_cache and -cache_all_trigrams
+     will now cause an error if they are specified.
+
+   * if beamwidth is too narrow when decoding a sentence, then decoding 
+     that sentence is restarted with temporarily increased beamwidth
+     i.e. automatically get a complete decoding for each sentence 
+     whatever the beam width (as long as not more than 16 increases are
+     required for a sentence!)
+
+   * improved initialisation of lub:  run a single-state silence
+     model over the first N frames of the utterance updating lub(t)
+     where necessary.  Also reapply the garbage model default lub to 
+     following lub frame each time lub is updated
+
+   * -new_lub enables an enhanced estimation of lub(t), using 
+     backtraces from complete word extensions to update the 
+     estimates.  Much narrower beamwidths may be used with
+     this option.  Phone level decoding is a side-effect of this
+     option and the time-aligned phone sequence of the recognised
+     string may be obtained using the -state_decode option.
+
+   * phone dependent thresholds for phone deactivation pruning.
+     Instead of using -prob_min to specify a global theshold use
+     -phone_floor <file> to specify a threshold for each phone.
+     The file is just a list of floats (cf priors file).
+
+   * removed -head-silence and -tail_silence option.  I never liked them.
+     And the effect of -head_silence is incorporated in the new lub 
+     initialisation procedure (much cleaner).
+
+============
+noway-0.99f:
+============
+
+  * -beam and -state_beam will take floating point arguments now 
+     (e.g. -beam 6.5)
+
+  * LM byte swapping is now automatic, -byte_swap_lm is no longer needed  
+     (nor supported).  NB: existing binary LMs written in
+     LITTLE_ENDIAN format (linux/pc) will be incorrect.  Use:
+    'noway -trigram old-bin-lm-file -write_lm new-bin-lm-file \
+     -no_decode -d lm_swap'
+     to write out a new file with the correct header.
+
+  * Use -inc_output [<nframes>] instead of -d how_are_we_doing  
+    nframes defaults to 25 if not specified.
+
+  * fixed bug in setting default_bigrams array (LM upper bound for 
+     each hypothesis)
+
+  * -cross_sentence option to allow cross-sentence decodings (of type
+     ... foo </s> <s> bar ...) assuming such LM probs are present
+
+  * -text_decode option to LM, scores text sentences using trigram LM
+
+  * -cache_all_trigrams is now default (use -old_caching for the old way)
+
+============
+noway-0.99e:
+============
+
+  * New LM caching scheme.  Slightly more efficient, will result in
+    identical search,  enabled with -cache_all_trigrams  (Recommended - 
+    this will become default behaviour soon, I think).
+
+  * Use -beam instead of -envelope and -state_beam instead of
+    -state_envelope  (previous usage of 'envelope' was non-standard,
+     so it is now being phased out).  Note that -envelppe and
+     -state_envelope will still work, but please change your param
+     files. 
+
+  * Compiling with -DLM_STATS results in computation of LM access
+    counts, which will be reported if you run with -verbose.  (Useful
+    for developing caching strategies.)
+
+  * Code for -hyp_prune and -pathword_threshold cleaned up, but since
+    these options don't give better or faster decodes they are not
+    recommended. 
+
+  * Requires GNU make.  Use .d files for dependencies.
+
+  * -pathword_threshold.  Default value now 0.  
+
+
+============
+noway-0.99d:
+============
+
+This is an interim release to let you take advantage of the new binary
+LM format and some memory improvements in the noway code.
+
+Binary LM format
+----------------
+A new binary LM format has been introduced.  the old format is still
+transparently compatible (the 4 byte header at the start of the file
+flags the LM format).  Principal advantages of the new format are that
+it is:
+
+  * more compact (for trigram LMs)
+  * faster to load (due to a better match to the way it is stored in
+    memory)
+
+
+{compile,read}lm redundant
+--------------------------
+noway does it all!  To compile (or get ascii printouts of) language
+models, use noway.  {compile,read}lm will not work with the new binary
+format. 
+
+To compile a binary LM from an old format binary lm:
+  noway -trigram tg-old.bin -write_lm tg-new.bin -no_decode
+
+To compile a binary LM from a gzipped ARPA ascii lm:
+  zcat tg-arpa.gz | noway -trigram stdin -write_lm tg-new.bin -no_decode
+
+To print out an (old or new) format binary lm:
+  noway -trigram tg.bin -print_lm -no_decode
+
+
+(NB: taking the ARPA lm on stdin is new use of stdin: previously stdin
+was only used for input probabilities).  A LM may only be input to
+noway via stdin with the '-no_decode' option (so that no probabilities
+can be expected).
+
+-byte_swap_lm will byte swap the input LM binary file (new or old
+format) as usual.
+
+-byte_swap_write_lm will byte swap the output binary LM file (new
+format). 
+
+-pron_prior, -inc_lm_cache redundant
+------------------------------------
+These flags need never be specified, as they have no effect.  Their
+previous effect is now default behaviour.  If you don't want to use
+priors on pronunciations there is a new flag -no_pron_prior.
+
+Also '-pathword_threshold 1' need not be specified as it is default
+behaviour (and always has been) to set pathword_threshold to 1.
+
+
+speed, memory improvements
+--------------------------
+About 5% speed improvement (big deal!)  and a substantial saving in
+the memory requirement for the pronunciation tree (for 20K lexicon
+using dragon phoneset, tree memory requirement down from 35-40Mb to
+about 14Mb).  The new binary format for LMs also speeds up startup
+(substantially in the case of my 64Mb linux box when doing 20K trigram
+decodings). 
+
+
+There are various other new flags but most of them don't work yet.
+
+===========
+noway-0.99:
+===========
+
+scheduler.cc:
+   sysconf(_SC_CLK_TCK) should now work if available
+
+lexicon.cc:
+   pause -> interword-pause
+
+hmm.h:
+   added count of total states and global indexing
+
+grammar.cc:
+   added support for byte swapping binary LM files
+
+lexicon.cc:
+   ordering of arguments to -prob_min reversed 
+   (ie now: -prob_min 0.00003 1.0e-10)
+
+acoustic.cc + others:
+    can use -lub_n  option to specify how many posteriors to average 
+    over to initialize lub(t).
+

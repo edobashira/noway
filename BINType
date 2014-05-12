@@ -1,0 +1,31 @@
+#!/bin/csh
+# UNAME - sparc-sun-sunos4
+#         sparc-sun-solaris2.5
+#         i386-unknown-linux
+#         i386-unknown-solaris2.5
+set BINTYPE = `uname`
+
+if ( $BINTYPE == Linux ) then
+    set MTYPE = `uname -m`
+    if ( $MTYPE =~ i?86) then
+      set MTYPE = i386
+    endif
+    set BINTYPE =  ${MTYPE}-unknown-linux
+else
+    if ( $BINTYPE == SunOS ) then 
+	if ( `uname -r | cut -c1` == 5 ) then # Solaris-2
+            set SolarisVersion = `uname -r | cut -c3-`
+	    if ( `uname -m | cut -c1,2,3,4` == sun4 ) then
+		set BINTYPE =  sparc-sun-solaris2.$SolarisVersion
+	    else
+		set BINTYPE =  i386-unknown-solaris2.$SolarisVersion
+            endif
+        else                             # Solaris-1
+	    set BINTYPE =  sparc-sun-sunos4
+        endif
+    else # guess at an i386-next for now
+	set BINTYPE =  i386-unknown-next
+    endif
+endif
+
+echo $BINTYPE
