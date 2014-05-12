@@ -58,7 +58,7 @@ public:
   STRING get_topic() { return topic; }
   STRING get_id() { return id; }
 
-  VOID print_start(GENFILE* fp, CHAR* comment = NULL){ 
+  VOID print_start(GENFILE* fp, const CHAR* comment = NULL){ 
     if(comment == NULL)
       fp->fprintf("<Section S_time=%.3f E_time=%.3f Type=%s Topic=%s ID=%s >\n",
 		  fstime, fetime, type, topic, id); 
