@@ -85,8 +85,6 @@ MIXTURE_NGRAM::update_cache(LIST<HYP*>* hlist){
 
 INT
 MIXTURE_NGRAM::get_prob(HYP* h, INT nextword, INT hypid){
-  INT res = 0;
-
   get_component_probs(h, nextword, hypid); 
   panic("Not yet implemented!\n");
   return h->wt_sum_probs();
